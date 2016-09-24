@@ -8,16 +8,25 @@ typedef uint8_t byte;
 #define SERIAL_PRESCALE ((F_CPU / ( SERIAL_BAUD * 16UL )) - 1)
 
 int main(void) {
-  UCSR0B = ( 1 << RXEN0 ) | ( 1 << TXEN0 );
   UCSR0C = ( 0 << UMSEL00 ) | ( 0 << UPM00 ) | ( 0 << USBS0 )
 	| ( 0b11 << UCSZ00 ) | ( 0 << UCPOL0 );
   UBRR0 = SERIAL_PRESCALE;
+  UCSR0B = ( 1 << RXEN0 ) | ( 1 << TXEN0 );
 
   DDRB = 0b100000;
   for( ;; ) {
+    // write a byte
     while( !( UCSR0A & ( 1 << UDRE0 ) ) ) { }
     UDR0 = 65;
-    PORTB ^=  0b100000;
+
+    // read a byte
+    while( !( UCSR0A & ( 1 << RXC0 ) ) ) { }
+    byte val = UDR0;
+    if( val == 65 ) {
+      PORTB = 0b100000;
+    } else if( val == 66 ) {
+      PORTB = 0;
+    }
   }
   return 0;
 
