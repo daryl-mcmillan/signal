@@ -14,11 +14,14 @@ int main(void) {
   UBRR0 = SERIAL_PRESCALE;
 
   DDRB = 0b100000;
+  long i = 0;
   for( ;; ) {
-    PORTB = 0b100000;
-    for( int i=0; i<100000; i++ ) {}
-    PORTB = 0;
-    for( int i=0; i<100000; i++ ) {}
+    i++;
+    if( i & 0x100000 ) {
+      PORTB = 0b100000;
+    } else {
+      PORTB = 0;
+    }
   }
   return 0;
 
