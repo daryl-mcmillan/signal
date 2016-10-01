@@ -4,6 +4,7 @@ LDFLAGS=-mmcu=$(PROCESSOR)
 CXX=avr-gcc
 CC=avr-gcc
 BAUD=19200
+AS=avr-as
 
 PROGNAME=main
 COMPORT=/dev/ttyUSB0
@@ -14,9 +15,11 @@ $(PROGNAME).hex: $(PROGNAME)
 upload: $(PROGNAME).hex
 	avrdude -v -carduino -p$(PROCESSOR) -P$(COMPORT) -b$(BAUD) -D -Uflash:w:$(PROGNAME).hex:i
 
-main.o: main.cc
+main.o: main.cc signal.h
 
-$(PROGNAME): main.o
+signal.o: signal.S
+
+$(PROGNAME): main.o signal.o
 
 clean:
 	$(RM) *.hex
