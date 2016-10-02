@@ -1,13 +1,90 @@
 .section .text
+
+#define PORTD 0x0B
+
 .global signal
 signal:
   movw r18, r24
   .rept 8
-  out 0x0B, r19
+  out PORTD, r19
   lsl r19
   .endr
   .rept 8
-  out 0x0B, r18
+  out PORTD, r18
   lsl r18
   .endr
   rjmp signal
+
+.global loop_out
+loop_out: ; ( length, buffer )
+  #define buffer r22
+  #define length r24
+  #define index r26
+  #define r_pump r18
+  #define buffer_0 r19
+  #define remaining r28
+  movw X, buffer
+  ld buffer_0, X+
+  movw buffer, X
+  sbiw length, 1
+reset1:
+  nop
+  nop
+  nop
+  out PORTD, buffer_0
+  movw X, buffer
+  movw remaining, length
+  nop
+  nop
+  nop
+loop1:
+  ld r_pump, X+
+  out PORTD, r_pump
+  sbiw remaining, 1
+  breq reset1
+  rjmp loop1
+
+.global loop_8bit_3tick
+loop_8bit_3tick: ; ( length, buffer ) 
+  #define buffer r22
+  #define length r24
+  #define length_low r24
+  #define length_high r25
+
+  #define Z_low r30
+  #define Z_high r31
+  #define r_pump r18
+  #define buffer_0 r19
+  #define buffer_1 r20
+  #define buffer_2 r21
+
+  ; pop 3 byes off the buffer
+  ld buffer_0, X+
+  ld buffer_1, X+
+  ld buffer_2, X+
+  movw buffer, X
+  sbiw length, 3
+
+  ; Z = end - ( 2 * length )
+  ldi Z_low, pm_lo8(end)
+  ldi Z_high, pm_hi8(end)
+  sub Z_low, length_low
+  sbc Z_high, length_high
+  sub Z_low, length_low
+  sbc Z_high, length_high
+
+loop:
+  out PORTD, buffer_0
+  movw X, buffer
+  nop
+  out PORTD, buffer_1
+  ld r_pump, X+
+  out PORTD, buffer_2
+  ijmp
+  .rept 1000
+  out PORTD, r_pump
+  ld r_pump, X+
+  .endr
+  out PORTD, r_pump
+  rjmp loop
+end:

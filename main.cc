@@ -43,6 +43,20 @@ ISR(USART_RX_vect) {
 
 int main(void) {
 
+  DDRD = 0xFF;
+  char buffer[1000];
+  int length = 0;
+  for( int i=0; i<63; i++ ) {
+    buffer[length] = i << 2;
+    length ++;
+  }
+  for( int i=62; i>=1; i-- ) {
+    buffer[length] = i << 2;
+    length ++;
+  }
+
+  loop_out( length, buffer );
+
   serialSetup( 19200 );
   for( ;; ) {
     serialWrite( "this is a test " );
