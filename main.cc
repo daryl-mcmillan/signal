@@ -4,8 +4,6 @@
 
 #include "signal.h"
 
-typedef uint8_t byte;
-
 void serialSetup( int baud ) {
   int prescale = (F_CPU / ( baud * 16UL )) - 1;
   UCSR0C = ( 0 << UMSEL00 ) | ( 0 << UPM00 ) | ( 0 << USBS0 )
@@ -31,12 +29,12 @@ const char * HEX = "0123456789ABCDEF";
 
 void serialWrite( unsigned int number ) {
   serialWrite( "0x" );
-  for( int shift = 28; shift >= 0; shift -=4 ) {
+  for( int shift = 28; shift >= 0; shift -= 4 ) {
     serialWrite( HEX[(number >> shift) & 0xF] );
   }
 }
 
-volatile unsigned int counter = 17;
+volatile unsigned int counter = 0;
 
 ISR(USART_RX_vect) {
   char val = UDR0;
