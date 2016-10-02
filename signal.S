@@ -19,7 +19,6 @@ signal:
 loop_out: ; ( length, buffer )
   #define buffer r22
   #define length r24
-  #define index r26
   #define r_pump r18
   #define buffer_0 r19
   #define remaining r28
@@ -51,27 +50,28 @@ loop_8bit_3tick: ; ( length, buffer )
   #define length_low r24
   #define length_high r25
 
-  #define Z_low r30
-  #define Z_high r31
   #define r_pump r18
   #define buffer_0 r19
   #define buffer_1 r20
   #define buffer_2 r21
 
-  ; pop 3 byes off the buffer
+  #define MAX_BUFFER 960
+
+  ; pop 3 bytes off the buffer
+  movw X, buffer
   ld buffer_0, X+
   ld buffer_1, X+
   ld buffer_2, X+
   movw buffer, X
   sbiw length, 3
 
-  ; Z = end - ( 2 * length )
-  ldi Z_low, pm_lo8(end)
-  ldi Z_high, pm_hi8(end)
-  sub Z_low, length_low
-  sbc Z_high, length_high
-  sub Z_low, length_low
-  sbc Z_high, length_high
+  ; Z = end_of_loop - 2 * length
+  ldi ZL, pm_lo8(end_of_loop)
+  ldi ZH, pm_hi8(end_of_loop)
+  sub ZL, length_low
+  sbc ZH, length_high
+  sub ZL, length_low
+  sbc ZH, length_high
 
 loop:
   out PORTD, buffer_0
@@ -81,10 +81,12 @@ loop:
   ld r_pump, X+
   out PORTD, buffer_2
   ijmp
-  .rept 1000
+start_of_loop:
+  .rept MAX_BUFFER
   out PORTD, r_pump
   ld r_pump, X+
   .endr
   out PORTD, r_pump
   rjmp loop
-end:
+end_of_loop:
+  nop

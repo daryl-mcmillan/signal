@@ -55,7 +55,8 @@ int main(void) {
     length ++;
   }
 
-  loop_out( length, buffer );
+  //loop_out( length, buffer );
+  loop_8bit_3tick( length, buffer );
 
   serialSetup( 19200 );
   for( ;; ) {
