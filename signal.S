@@ -49,13 +49,31 @@ loop_out: ; ( length, buffer, stall_count )
   movw length, temp16
 
   ; set loop start
+  ldi temp, 0b11111000
+  and temp, stall_countL
+  or temp, stall_countH
+  breq stall_fast
+  ; use the stall loop
+  ldi ZL, pm_lo8(stall)
+  ldi ZH, pm_hi8(stall)
+  rjmp stall_fine
+stall_fast:
+  ; no stall looping
   ldi ZL, pm_lo8(loop1)
   ldi ZH, pm_hi8(loop1)
+stall_fine:
   ; apply last 3 bits
-  ldi temp, 7
+  ldi temp, 0b111
   and temp, stall_countL
   sub ZL, temp
   sbci ZH, 0
+  ; stall_count = stall_count >> 3
+  lsr stall_countH
+  ror stall_countL
+  lsr stall_countH
+  ror stall_countL
+  lsr stall_countH
+  ror stall_countL
 
   ; setup first loop
   movw X, buffer
