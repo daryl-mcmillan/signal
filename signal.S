@@ -2,45 +2,56 @@
 
 #define PORTD 0x0B
 
-.global signal
-signal:
-  movw r18, r24
-  .rept 8
-  out PORTD, r19
-  lsl r19
-  .endr
-  .rept 8
-  out PORTD, r18
-  lsl r18
-  .endr
-  rjmp signal
-
 .global loop_out
 loop_out: ; ( length, buffer )
   #define buffer r22
   #define length r24
+  #define lengthL r24
+  #define lengthH r25
   #define r_pump r18
-  #define buffer_0 r19
+  #define buffer_0x r19
   #define remaining r28
+
+  ; load last byte
   movw X, buffer
-  ld buffer_0, X+
+  add XL, lengthL
+  adc XH, lengthH
+  ld r_pump, -X
+
+  ; preload first byte xor last byte
+  movw X, buffer
+  ld buffer_0x, X+
+  eor buffer_0x, r_pump
+
+  ; omit pre-loaded from buffer
   movw buffer, X
   sbiw length, 1
-reset1:
-  nop
-  nop
-  nop
-  out PORTD, buffer_0
+
+  ; adjust length to underflow
+  ; at end of loop
+  sbiw length, 1
+  ori lengthH, 0x80
+
+  ; setup first loop
   movw X, buffer
   movw remaining, length
+  eor r_pump, buffer_0x
+  rjmp loop1
+
+reset1:
+  movw X, buffer
+  out PORTD, r_pump
+  movw remaining, length
+  eor r_pump, buffer_0x ; load and clear overflow
+  rjmp loop1
   nop
   nop
   nop
 loop1:
-  ld r_pump, X+
-  out PORTD, r_pump
+  brvs reset1
   sbiw remaining, 1
-  breq reset1
+  out PORTD, r_pump
+  ld r_pump, X+
   rjmp loop1
 
 .global loop_8bit_3tick
@@ -55,7 +66,7 @@ loop_8bit_3tick: ; ( length, buffer )
   #define buffer_1 r20
   #define buffer_2 r21
 
-  #define MAX_BUFFER 960
+  #define MAX_BUFFER 60
 
   ; pop 3 bytes off the buffer
   movw X, buffer
