@@ -37,7 +37,7 @@ int main(void) {
   add( 255 );
   add( 255 );
 
-  loop_out( length, buffer );
+  loop_out( length, buffer, 0 );
   //loop_8bit_3tick( length, buffer );
 
   serialSetupHandler( 19200, &charReceived );

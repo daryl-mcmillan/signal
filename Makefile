@@ -19,6 +19,8 @@ main.o: main.cc signal.h serial.h
 
 signal.o: signal.S
 
+threeTick.o: threeTick.S
+
 serial.o: serial.cc serial.h
 
 $(PROGNAME): main.o signal.o serial.o
